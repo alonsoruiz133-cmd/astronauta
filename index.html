@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Animación 3D controlada con WASD</title>
+    <style>
+      body { margin: 0; overflow: hidden; background-color: #000; }
+      canvas { display: block; }
+    </style>
+    <!-- Cargar Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+    <!-- Cargar GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/examples/js/loaders/GLTFLoader.js"></script>
+  </head>
+
+  <body>
+    <script>
+      let scene, camera, renderer, model, clock, mixer;
+      let keys = {};
+
+      init();
+      animate();
+
+      function init() {
+        // Escena y cámara
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 3);
+
+        // Renderizador
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Luz
+        const light = new THREE.DirectionalLight(0xffffff, 2);
+        light.position.set(5, 10, 7);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+        // Piso
+        const floorGeometry = new THREE.PlaneGeometry(100, 100);
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        // Reloj para animaciones
+        clock = new THREE.Clock();
+
+        // Cargar modelo GLB
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+          "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+          function (gltf) {
+            model = gltf.scene;
+            model.scale.set(1.5, 1.5, 1.5);
+            scene.add(model);
+
+            mixer = new THREE.AnimationMixer(model);
+            if (gltf.animations.length > 0) {
+              const action = mixer.clipAction(gltf.animations[0]);
+              action.play();
+            }
+          },
+          undefined,
+          function (error) {
+            console.error("Error al cargar el modelo:", error);
+          }
+        );
+
+        // Controles de teclado
+        window.addEventListener("keydown", (e) => (keys[e.key.toLowerCase()] = true));
+        window.addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
+
+        // Ajuste al cambiar tamaño
+        window.addEventListener("resize", onWindowResize);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+
+        if (model) {
+          const speed = 2 * delta;
+          if (keys["w"]) model.position.z -= speed;
+          if (keys["s"]) model.position.z += speed;
+          if (keys["a"]) model.position.x -= speed;
+          if (keys["d"]) model.position.x += speed;
+        }
+
+        renderer.render(scene, camera);
+      }
+    </script>
+  </body>
+</html>
