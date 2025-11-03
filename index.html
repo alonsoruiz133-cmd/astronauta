@@ -54,7 +54,7 @@
         // Cargar modelo GLB (astronauta público)
         const loader = new THREE.GLTFLoader();
         loader.load(
-          "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+          "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF-Binary/CesiumMan.glb",
           function (gltf) {
             model = gltf.scene;
             model.scale.set(1.5, 1.5, 1.5);
@@ -106,3 +106,4 @@
     </script>
   </body>
 </html>
+
